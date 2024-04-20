@@ -1,5 +1,7 @@
 package com.proyecto.services;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.proyecto.entities.*;
@@ -27,14 +29,24 @@ public class CartService {
     public Cart getCart(String id) {
         return carts.get(id);
     }
-
-    public void addProductToCart(String cartId, Product product) {
+    
+    public ResponseEntity<String> addProductToCart(String cartId, Product product) {
         Cart cart = carts.get(cartId);
         if (cart != null) {
-            cart.getProducts().add(product);
+            boolean productExists = cart.getProducts().stream()
+                    .anyMatch(p -> p.getId() == product.getId());
+            
+            if (!productExists) {
+                cart.getProducts().add(product);
+                return ResponseEntity.status(HttpStatus.CREATED).body("Producto agregado correctamente al carrito");
+            } else {
+                return ResponseEntity.badRequest().body("El producto ya existe en el carrito");
+            }
+        } else {
+            return ResponseEntity.notFound().build();
         }
     }
-
+    
     public void deleteCart(String id) {
         carts.remove(id);
     }
